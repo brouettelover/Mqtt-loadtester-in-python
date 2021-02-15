@@ -4,11 +4,11 @@
 ##Prerequise
 You need to have pip to install the dependencies
 
-##Install the dependencies
-`pip install paho-mqtt`
-`pip install configparser`
-`pip install random`
-`pip install optparse`
+##Install the dependencies<br/>
+`pip install paho-mqtt`<br/>
+`pip install configparser`<br/>
+`pip install random`<br/>
+`pip install optparse`<br/>
  
 ##Change the config.ini
 change the files with your paremeters
