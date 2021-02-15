@@ -19,3 +19,6 @@ change the files with your paremeters
 >[config]
 >server = ip
 >port = port
+
+I think you should use an
+`<addr>` element here instead.
