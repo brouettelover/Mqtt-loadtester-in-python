@@ -2,7 +2,7 @@
  A simple mqtt loadtester made in python
 
 ## Prerequise<br/>
-You need to have pip to install the dependencies
+You need to have pip to install the dependencies and obviously python 3
 
 ## Install the dependencies<br/>
 ```
