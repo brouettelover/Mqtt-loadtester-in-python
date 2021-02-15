@@ -29,7 +29,7 @@ git clone https://github.com/brouettelover/Mqtt-loadtester-in-python/<br/>
 cd Mqtt-loadtester-in-python <br />
 ```
 
-#### To launch the pub or sup just do <br/>
+#### To launch the pub or sub just do <br/>
 ```
 python mqtt_sub.py<br/>
 python mqtt_pub.py<br/>
