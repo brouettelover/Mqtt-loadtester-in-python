@@ -1,10 +1,10 @@
 # Mqtt loadtester in python 
  A simple mqtt loadtester made in python
 
-##Prerequise
+## Prerequise<br/>
 You need to have pip to install the dependencies
 
-##Install the dependencies<br/>
+## Install the dependencies<br/>
 `pip install paho-mqtt`<br/>
 `pip install configparser`<br/>
 `pip install random`<br/>
