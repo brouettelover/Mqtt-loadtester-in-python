@@ -10,7 +10,7 @@ You need to have pip to install the dependencies
 `pip install random`<br/>
 `pip install optparse`<br/>
  
-### Change the config.ini
+#### Change the config.ini
 change the files with your paremeters
 
 >[account]<br/>
@@ -20,6 +20,6 @@ change the files with your paremeters
 >server = ip<br/>
 >port = port<br/>
 
-## Install <br/>
+#### Install <br/>
 >git clone https://github.com/brouettelover/Mqtt-loadtester-in-python/<br/>
 >cd Mqtt-loadtester-in-python
