@@ -24,6 +24,6 @@ change the files with your paremeters
 >git clone https://github.com/brouettelover/Mqtt-loadtester-in-python/<br/>
 >cd Mqtt-loadtester-in-python
 <br />
-to launche the pub or sup just do 
+to launche the pub or sup just do <br/>
 `python mqtt_sub.py`<br/>
 `python mqtt_pub.py`<br/>
