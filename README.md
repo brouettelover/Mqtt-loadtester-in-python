@@ -10,12 +10,12 @@ You need to have pip to install the dependencies
 `pip install random`<br/>
 `pip install optparse`<br/>
  
-##Change the config.ini
+## Change the config.ini
 change the files with your paremeters
 
->[account]
->username = user
->password = pass
->[config]
->server = ip
->port = port
+>[account]<br/>
+>username = user<br/>
+>password = pass<br/>
+>[config]<br/>
+>server = ip<br/>
+>port = port<br/>
