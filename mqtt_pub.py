@@ -50,7 +50,7 @@ group.add_option("-s", action="store", type="int", dest="sleeping_time", default
                   help="sleeping time")
 group.add_option("-T", action="store", type="int", dest="n_topic", default=1,
                   help="Number of desired topic")
-group.add_option("-N", action="store", type="int", dest="n_run", default=1,
+group.add_option("-N", action="store", type="int", dest="n_run", default=0,
                   help="number of runs")
 parser.add_option_group(group)
 (options, args) = parser.parse_args()
@@ -132,6 +132,52 @@ def pub_active(client, number_message, n_topic, topic, message_length, message_l
         message_send  = 0
     print("End of pub")
     client.disconnect()
+    
+def pub_run_0(client, number_message, n_topic, topic, message_length, message_length_2, qos, n_run, sleeping_time):
+    #The number of the message that has been send
+    message_send = 1
+    flag_message_length = 0
+    # height of the sequence that will be published
+    runs_height = number_message
+    # While the n_run is not achieved do
+    while(message_send <= runs_height):
+        #Start my countdown thread with the active time
+        global stop_threads
+        stop_threads = False
+        countdown_thread = threading.Thread(target=countdown)
+        countdown_thread.start()
+        #Check the flag and attribute the right msg length and swith the flag to the other message length 
+        if(flag_message_length == 0):
+            msg = length_conv(message_length)
+            flag_message_length = 1
+        else:
+            msg = length_conv(message_length_2)
+            flag_message_length = 0
+        #While the thread is active do
+        while(countdown_thread.is_alive()):
+            #While the number of message has not reach the height of the run and my countdow is on do
+            while(message_send <= runs_height and my_timer > 0):
+                #Publish in the number of topics specified with the correct message length and a specific Qos
+                for i in range(n_topic):
+                    client.publish(topic + str(i + 1), msg + str(message_send) ,qos) #add + str(message_send) after msg to see the number of messages in the sub
+                message_send  = message_send  + 1
+                #If all the message were send, stop the countdown and print the current_value
+                if(message_send == runs_height):
+                    print("All messages was send in  the last run in : " + str(options.active_time - my_timer) + "sec")
+                    stop_threads = True
+                    
+        #Check if the number of the message in the active time has all been realeased
+        if(message_send < runs_height):
+            print("Only published : " + str(message_send  - 1) + " Messages on " + str(n_topic) + " Topic(s)")
+        else:
+            print("All Message was send in : " + str(message_send  - 1) + " Messages on " + str(n_topic) + " Topic(s)")
+            break
+        #If there is a sleeping time wait for a certain amount of time
+        if(sleeping_time != 0):
+            print("Waiting : " + str(sleeping_time) + " sec")
+            time.sleep(sleeping_time)
+    print("End of pub")
+    client.disconnect()
 
 # Create a random string with a specific byte length
 def length_conv(message_length):
@@ -149,7 +195,10 @@ def publisher(client, topic, qos, number_message, message_length, message_length
             time.sleep(sleeping_time)
             pub_now(client, number_message, n_topic, topic, message_length, qos)
     else:
-        pub_active(client, number_message, n_topic, topic, message_length, message_length_2, qos, n_run, sleeping_time)
+        if(n_run == 0):
+            pub_run_0(client, number_message, n_topic, topic, message_length, message_length_2, qos, n_run, sleeping_time)
+        else:
+            pub_active(client, number_message, n_topic, topic, message_length, message_length_2, qos, n_run, sleeping_time)
 # Pub settings for the client
 def pub(qos, topic, username, password, clean_session, number_message, message_length, message_length_2, active_time, sleeping_time, n_topic, n_run) :
     #Create a random id with the username
@@ -162,8 +211,7 @@ def pub(qos, topic, username, password, clean_session, number_message, message_l
     client.connect(cp_mqtt["config"]['server'], cp_mqtt["config"]['port'], 60)
     client.on_connect=on_connect
     publisher(client, topic, qos, number_message, message_length, message_length_2, active_time, sleeping_time, n_topic, n_run)
-    #loop the connection forever
-    client.loop_forever()
+
 
 #To specify that those options are mandatory
 if(options.qos == None or options.clean_session == None or options.topic == None or options.number_message == None or options.message_length == None):
