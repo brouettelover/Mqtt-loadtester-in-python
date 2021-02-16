@@ -6,10 +6,8 @@ You need to have pip to install the dependencies and obviously python 3
 
 ## Install the dependencies<br/>
 ```
-pip install paho-mqtt
-pip install configparser
-pip install random
-pip install optparse
+pip install --user paho-mqtt
+pip install --user configparser
 ```
 
 #### Change the config.ini
