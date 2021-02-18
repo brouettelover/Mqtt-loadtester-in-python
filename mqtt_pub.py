@@ -84,6 +84,7 @@ def pub_now(client, number_message, n_topic, topic, message_length, qos):
     client.disconnect()
 # Publish with the sleeping time and active time
 def pub_active(client, number_message, n_topic, topic, message_length, message_length_2, qos, n_run, sleeping_time):
+    print("Starting publishing for " + str(options.active_time) + "sec")
     #The number of the run that is active now
     run_active = 1
     #The number of the message that has been send
@@ -131,15 +132,17 @@ def pub_active(client, number_message, n_topic, topic, message_length, message_l
         # reset the number of message sent
         message_send  = 0
     print("End of pub")
+    stop_threads = True
     client.disconnect()
-    
+#Used for no run set    
 def pub_run_0(client, number_message, n_topic, topic, message_length, message_length_2, qos, n_run, sleeping_time):
+    print("Starting publishing for " + str(options.active_time) + "sec")
     #The number of the message that has been send
     message_send = 1
     flag_message_length = 0
     # height of the sequence that will be published
     runs_height = number_message
-    # While the n_run is not achieved do
+    # While all the message has not being send
     while(message_send <= runs_height):
         #Start my countdown thread with the active time
         global stop_threads
@@ -168,15 +171,16 @@ def pub_run_0(client, number_message, n_topic, topic, message_length, message_le
                     
         #Check if the number of the message in the active time has all been realeased
         if(message_send < runs_height):
-            print("Only published : " + str(message_send  - 1) + " Messages on " + str(n_topic) + " Topic(s)")
+            print("Only published : " + str(message_send  - 1) + " Messages on " + str(n_topic) + " Topic(s)" )
         else:
-            print("All Message was send in : " + str(message_send  - 1) + " Messages on " + str(n_topic) + " Topic(s)")
+            print("All sends : " + str(message_send  - 1) + " Messages on " + str(n_topic) + " Topic(s)")
             break
         #If there is a sleeping time wait for a certain amount of time
         if(sleeping_time != 0):
             print("Waiting : " + str(sleeping_time) + " sec")
             time.sleep(sleeping_time)
     print("End of pub")
+    stop_threads = True
     client.disconnect()
 
 # Create a random string with a specific byte length
