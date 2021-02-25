@@ -233,13 +233,18 @@ def pub(qos, topic, username, password, clean_session, number_message, message_l
     client.on_publish = on_publish
     client._on_log = on_log
     client.connect(cp_mqtt["config"]['server'], cp_mqtt["config"]['port'], 600)
+    if(qos >= 1):
+        client.loop_start()
     client.loop_start()
     print("will publish")
     publisher(client, topic, qos, number_message, message_length, message_length_2, active_time, sleeping_time, n_topic, n_run)
-    while(flag_pub == 0):
-        time.sleep(1)
-    client.loop_stop()
-    client.disconnect()
+    if(qos >= 1):
+        while(flag_pub == 0): #to let the main thread running till the others threads has been done
+            time.sleep(1)
+        client.loop_stop()
+        client.disconnect()
+    else:
+        client.loop_forever()
     
     
 
