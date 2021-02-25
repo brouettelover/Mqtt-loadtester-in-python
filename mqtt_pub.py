@@ -235,7 +235,6 @@ def pub(qos, topic, username, password, clean_session, number_message, message_l
     client.connect(cp_mqtt["config"]['server'], cp_mqtt["config"]['port'], 600)
     if(qos >= 1):
         client.loop_start()
-    client.loop_start()
     print("will publish")
     publisher(client, topic, qos, number_message, message_length, message_length_2, active_time, sleeping_time, n_topic, n_run)
     if(qos >= 1):
