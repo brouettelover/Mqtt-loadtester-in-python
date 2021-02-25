@@ -3,6 +3,7 @@ import random
 import os
 import time
 import threading
+import datetime
 from optparse import OptionParser
 from optparse import OptionGroup
 import configparser
@@ -12,12 +13,13 @@ cp_mqtt = configparser.ConfigParser()
 cp_mqtt.read("mqtt_config.ini")
 username = cp_mqtt["account"]['username']
 password = cp_mqtt["account"]['password']
+flag_pub = 0
 
 #The following codes is for creating a beautiful CLI menu easily
 parser = OptionParser()
-# Add an option group with the tittle
+# Add an options group with the tittle
 group = OptionGroup(parser, "Mandatory Options")
-# Add an option to the menu
+# Add an options to the menu
 group.add_option("-q", "--qos",
                   action="store", type="int", dest="qos",
                   help="MQTT qos value from 0 to 2")
@@ -68,27 +70,34 @@ stop_threads = False
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
      # Display the result code of the connection
-    print("Connected with result code "+str(rc)) 
+    print("Connected with result code "+str(rc))
+def on_publish(client, userdata, mid):
+    global flag_pub
+    if(mid == options.number_message):
+        flag_pub = 1
+        print("all ack recieved : " + str(mid))
+
 def pub_now(client, number_message, n_topic, topic, message_length, qos):
-    x = 1
+    x = 1.0
     #create a msg with a specific number of length
-    msg = length_conv(message_length)
+    message_send = length_conv(message_length)
     # publish the number_message
     while(x <= number_message):
             # publish in all the topics
             for i in range(n_topic):
                 #Publish the message
-                client.publish(topic + str(i + 1), msg + str(x),qos)
-                print(x)
+                client.publish(topic + str(i + 1), message_send,qos)
+                time.sleep(0.001)
             x = x + 1
-    client.disconnect()
+                
+
 # Publish with the sleeping time and active time
 def pub_active(client, number_message, n_topic, topic, message_length, message_length_2, qos, n_run, sleeping_time):
     print("Starting publishing for " + str(options.active_time) + "sec")
     #The number of the run that is active now
     run_active = 1
     #The number of the message that has been send
-    message_send = 1
+    message_send = 1.0
     flag_message_length = 0
     # height of the sequence that will be published
     runs_height = number_message / n_run
@@ -112,7 +121,8 @@ def pub_active(client, number_message, n_topic, topic, message_length, message_l
             while(message_send <= runs_height and my_timer > 0):
                 #Publish in the number of topics specified with the correct message length and a specific Qos
                 for i in range(n_topic):
-                    client.publish(topic + str(i + 1), msg + str(message_send) ,qos) #add + str(message_send) after msg to see the number of messages in the sub
+                    client.publish(topic + str(i + 1), msg ,qos) #add + str(message_send) after msg to see the number of messages in the sub
+                    time.sleep(0.001)
                 message_send  = message_send  + 1
                 #If all the message were send, stop the countdown and print the current_value
                 if(message_send == runs_height):
@@ -133,7 +143,6 @@ def pub_active(client, number_message, n_topic, topic, message_length, message_l
         message_send  = 0
     print("End of pub")
     stop_threads = True
-    client.disconnect()
 #Used for no run set    
 def pub_run_0(client, number_message, n_topic, topic, message_length, message_length_2, qos, n_run, sleeping_time):
     print("Starting publishing for " + str(options.active_time) + "sec")
@@ -162,7 +171,8 @@ def pub_run_0(client, number_message, n_topic, topic, message_length, message_le
             while(message_send <= runs_height and my_timer > 0):
                 #Publish in the number of topics specified with the correct message length and a specific Qos
                 for i in range(n_topic):
-                    client.publish(topic + str(i + 1), msg + str(message_send) ,qos) #add + str(message_send) after msg to see the number of messages in the sub
+                    client.publish(topic + str(i + 1),  msg ,qos) #add + str(message_send) after msg to see the number of messages in the sub
+                    time.sleep(0.001)
                 message_send  = message_send  + 1
                 #If all the message were send, stop the countdown and print the current_value
                 if(message_send == runs_height):
@@ -181,8 +191,8 @@ def pub_run_0(client, number_message, n_topic, topic, message_length, message_le
             time.sleep(sleeping_time)
     print("End of pub")
     stop_threads = True
-    client.disconnect()
-
+    now = datetime.datetime.now()
+    print (now.strftime("%Y-%m-%d %H:%M:%S"))
 # Create a random string with a specific byte length
 def length_conv(message_length):
     rand_string = str(os.urandom(message_length))
@@ -203,20 +213,37 @@ def publisher(client, topic, qos, number_message, message_length, message_length
             pub_run_0(client, number_message, n_topic, topic, message_length, message_length_2, qos, n_run, sleeping_time)
         else:
             pub_active(client, number_message, n_topic, topic, message_length, message_length_2, qos, n_run, sleeping_time)
+def on_log(client, userdata, level, buf):
+    if(level < 0x10 and level >= 0x04):
+        print("log: ",level,buf)
 # Pub settings for the client
 def pub(qos, topic, username, password, clean_session, number_message, message_length, message_length_2, active_time, sleeping_time, n_topic, n_run) :
     #Create a random id with the username
+    now = datetime.datetime.now()
+    print (now.strftime("%Y-%m-%d %H:%M:%S"))
     nbr = random.randint(0, 10000000)
     client_id=username+"_pub_id:"+str(nbr)
     #Settings for the client
     client = mqtt.Client(client_id, clean_session, userdata=None, transport="tcp")
     client.username_pw_set(username, password)
+    if(qos >= 1):
+        client.max_inflight_messages_set(number_message)
     #Connect to the broker
-    client.connect(cp_mqtt["config"]['server'], cp_mqtt["config"]['port'], 60)
-    client.on_connect=on_connect
+    client.on_connect= on_connect
+    client.on_publish = on_publish
+    client._on_log = on_log
+    client.connect(cp_mqtt["config"]['server'], cp_mqtt["config"]['port'], 600)
+    client.loop_start()
+    print("will publish")
     publisher(client, topic, qos, number_message, message_length, message_length_2, active_time, sleeping_time, n_topic, n_run)
+    while(flag_pub == 0):
+        time.sleep(1)
+    client.loop_stop()
+    client.disconnect()
+    
+    
 
-
+    
 #To specify that those options are mandatory
 if(options.qos == None or options.clean_session == None or options.topic == None or options.number_message == None or options.message_length == None):
     print("Pls provide all the mandatory options (for help -h)")
