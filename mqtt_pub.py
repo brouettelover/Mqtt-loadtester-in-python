@@ -232,7 +232,7 @@ def pub(qos, topic, username, password, clean_session, number_message, message_l
     client.on_connect= on_connect
     client.on_publish = on_publish
     client._on_log = on_log
-    client.connect(cp_mqtt["config"]['server'], cp_mqtt["config"]['port'], 600)
+    client.connect(cp_mqtt["config"]['server'], cp_mqtt["config"]['port'], 3600)
     if(qos >= 1):
         client.loop_start()
     print("will publish")
