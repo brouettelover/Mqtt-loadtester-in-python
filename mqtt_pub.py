@@ -36,7 +36,7 @@ group.add_option("-c", "--clean_session",
                   action="store", dest="clean_session", default=True,
                   help="True or false")
 parser.add_option_group(group)
-group = OptionGroup(parser, "Optionnal Options")
+group = OptionGroup(parser, "Optional Options")
 group.add_option("-u", "--username",
                   action="store", type="string", dest="username", default=username,
                   help="MQTT username")
@@ -71,11 +71,17 @@ stop_threads = False
 def on_connect(client, userdata, flags, rc):
      # Display the result code of the connection
     print("Connected with result code "+str(rc))
+ack = 0
+#Wait all the ack from the broker and finish
 def on_publish(client, userdata, mid):
     global flag_pub
-    if(mid == options.number_message):
+    now = datetime.datetime.now()
+    print(str(now.strftime("%Y-%m-%d %H:%M:%S")) +"|"+ "mid : " + str(mid))
+    global ack
+    ack = ack + 1
+    if(ack == options.number_message):
+        print("all ack recieved : " + str(ack)) 
         flag_pub = 1
-        print("all ack recieved : " + str(mid))
 
 def pub_now(client, number_message, n_topic, topic, message_length, qos):
     x = 1.0
@@ -141,7 +147,6 @@ def pub_active(client, number_message, n_topic, topic, message_length, message_l
         run_active = run_active + 1
         # reset the number of message sent
         message_send  = 0
-    print("End of pub")
     stop_threads = True
 #Used for no run set    
 def pub_run_0(client, number_message, n_topic, topic, message_length, message_length_2, qos, n_run, sleeping_time):
@@ -189,10 +194,9 @@ def pub_run_0(client, number_message, n_topic, topic, message_length, message_le
         if(sleeping_time != 0):
             print("Waiting : " + str(sleeping_time) + " sec")
             time.sleep(sleeping_time)
-    print("End of pub")
     stop_threads = True
-    now = datetime.datetime.now()
-    print (now.strftime("%Y-%m-%d %H:%M:%S"))
+    
+    
 # Create a random string with a specific byte length
 def length_conv(message_length):
     rand_string = str(os.urandom(message_length))
@@ -213,13 +217,17 @@ def publisher(client, topic, qos, number_message, message_length, message_length
             pub_run_0(client, number_message, n_topic, topic, message_length, message_length_2, qos, n_run, sleeping_time)
         else:
             pub_active(client, number_message, n_topic, topic, message_length, message_length_2, qos, n_run, sleeping_time)
-def on_log(client, userdata, level, buf):
+    print("End of pub")
+    now = datetime.datetime.now()
+    print (now.strftime("%Y-%m-%d %H:%M:%S")) #show time at the end
+#Show a log message when there is an ERROR or Warning
+def on_log(client, userdata, level, buf): 
     if(level < 0x10 and level >= 0x04):
         print("log: ",level,buf)
 # Pub settings for the client
 def pub(qos, topic, username, password, clean_session, number_message, message_length, message_length_2, active_time, sleeping_time, n_topic, n_run) :
     #Create a random id with the username
-    now = datetime.datetime.now()
+    now = datetime.datetime.now() #show time at the begin of ex
     print (now.strftime("%Y-%m-%d %H:%M:%S"))
     nbr = random.randint(0, 10000000)
     client_id=username+"_pub_id:"+str(nbr)
@@ -227,16 +235,17 @@ def pub(qos, topic, username, password, clean_session, number_message, message_l
     client = mqtt.Client(client_id, clean_session, userdata=None, transport="tcp")
     client.username_pw_set(username, password)
     if(qos >= 1):
-        client.max_inflight_messages_set(number_message)
+        client.max_inflight_messages_set(number_message) # to send the message in parallele
     #Connect to the broker
     client.on_connect= on_connect
     client.on_publish = on_publish
     client._on_log = on_log
-    client.connect(cp_mqtt["config"]['server'], cp_mqtt["config"]['port'], 3600)
+    client.connect(cp_mqtt["server"]['host'], int(cp_mqtt['server']['port']), 3600) #Keep alive 3600 sec - 1h
     if(qos >= 1):
         client.loop_start()
     print("will publish")
     publisher(client, topic, qos, number_message, message_length, message_length_2, active_time, sleeping_time, n_topic, n_run)
+    
     if(qos >= 1):
         while(flag_pub == 0): #to let the main thread running till the others threads has been done
             time.sleep(1)
